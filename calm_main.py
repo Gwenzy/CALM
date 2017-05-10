@@ -3,7 +3,7 @@ import pygame, os, sys, tkinter, socket
 from tkinter import *
 #Const
 IP_SERVER = "127.0.0.1"
-PORT_SERVER = 1234
+PORT_SERVER_MSCLIST = 2222
 PORT_SERVER_DL = 1111
 MUSIC_DIRECTORY_WIN = os.getenv('APPDATA')+"\\CALM\\"
 MUSIC_DIRECTORY = ""
@@ -25,10 +25,6 @@ if sys.platform=="win32":
     
 if not os.path.isdir(MUSIC_DIRECTORY):
     os.makedirs(MUSIC_DIRECTORY)
-
-#Server connection attempt
-
-
 
 
 
@@ -93,7 +89,13 @@ def getOfflineMusics():
         if file.endswith(".mp3"):
             localMusics.append(os.path.join(MUSIC_DIRECTORY, file))
 def isServerOnline():
-    None
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+		s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+		s.close()
+		return True
+	except: 
+		return False
     #Emeric
 def downloadMusic(musicName):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -128,7 +130,17 @@ def getMusics():
     musics = []
     
     if(isServerOnline()):
-        None
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+		s.send(u"musiclist")
+		s.close()
+		s.bind(('127.0.0.1', PORT_SERVER_MSCLIST+1))
+		s.listen(5)
+        client, address = s.accept()
+        response = client.recv(9999999)
+		
+
+		
     else:
        getOfflineMusics()
        return localMusics
