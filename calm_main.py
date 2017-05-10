@@ -1,5 +1,5 @@
 #Imports
-import pygame, os, sys, tkinter, socket
+import pygame, os, sys, tkinter, socket, time
 from tkinter import *
 #Const
 IP_SERVER = "127.0.0.1"
@@ -91,11 +91,12 @@ def getOfflineMusics():
 def isServerOnline():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-		s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
-		s.close()
-		return True
-	except: 
-		return False
+        s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+        s.close()
+        time.sleep(1)
+        return True
+    except: 
+        return False
     #Emeric
 def downloadMusic(musicName):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -131,16 +132,18 @@ def getMusics():
     
     if(isServerOnline()):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
-		s.send(u"musiclist")
-		s.close()
-		s.bind(('127.0.0.1', PORT_SERVER_MSCLIST+1))
-		s.listen(5)
-        client, address = s.accept()
-        response = client.recv(9999999)
-		
+        s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+        print("Debug")
+        
+        
+        s.send("musiclist".encode())
+        s.close()
+        response = s.recv(9999999).decode()
+        for music in response.split("|"):
+            musics.append(music)
+        return musics    
 
-		
+        
     else:
        getOfflineMusics()
        return localMusics
@@ -194,7 +197,7 @@ listbox.pack(side=LEFT, fill=BOTH)
 scrollbar.pack(side=LEFT, fill=Y)
 scrollbar.config(command=listbox.yview)
 
-downloadMusic("gdf")
+# downloadMusic("gdf")
 master.mainloop()
 
 
