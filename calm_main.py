@@ -69,6 +69,8 @@ def play(musicA, newID):
     else:
         music.stop()
         print("Executed command with "+musicA)
+        if isMusicDownloaded(musicA)==False:
+            downloadMusic(musicA)
         music.load(MUSIC_DIRECTORY+musicA+".mp3")
         music.play()
         currentMusic = musicA
@@ -99,26 +101,31 @@ def isServerOnline():
         return False
     #Emeric
 def downloadMusic(musicName):
+
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+    s.send(("download"+musicName).encode())
+    s.close()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((IP_SERVER, PORT_SERVER_DL))
-
-    file_name = "claudia_dictionnaire.py"
-    s.send(file_name.encode())
-    file_name = '%s' % (file_name,)
     r = s.recv(9999999)
-    with open(MUSIC_DIRECTORY+file_name,'wb') as _file:
+    with open(MUSIC_DIRECTORY+musicName+".mp3",'wb') as _file:
         _file.write(r)
-    print("Le fichier a été correctement copié dans : %s." % file_name)
+    print("Le fichier a été correctement téléchargé")
     
     s.close()
     
     
-"""def isMusicDownloaded(musicID):
+def isMusicDownloaded(musicID):
+    getOfflineMusics()
+    global localMusics
     for i in localMusics:
-        if((musicID+"- ") in i):
+        if(musicID in i):
             return True
         else:
-            return False"""
+            None
+    return False     
 def getFileNameByID(musicID):
     None
     #Emeric
@@ -138,9 +145,16 @@ def getMusics():
         
         s.send("musiclist".encode())
         s.close()
-        response = s.recv(9999999).decode()
+        
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind((IP_SERVER, PORT_SERVER_MSCLIST+1))
+        s.listen(5)
+        client, address = s.accept()
+        response = client.recv(9999999).decode()
+        print(response)
         for music in response.split("|"):
             musics.append(music)
+        s.close()
         return musics    
 
         
@@ -150,10 +164,20 @@ def getMusics():
 continuer = 1
 
 def like():
-    None
+
+    print("You just liked "+currentMusic)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+    s.send(("like"+currentMusic).encode())
+    s.close()
     
 def dislike():
-    None
+    print("You just disliked "+currentMusic)
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+    s.send(("dislike"+currentMusic).encode())
+    s.close()
 
 
 
@@ -190,8 +214,9 @@ w.config(command= lambda x: updateVolume())
 scrollbar = Scrollbar(master)
 
 
-listbox = Listbox(master, yscrollcommand=scrollbar.set)
+listbox = Listbox(master, yscrollcommand=scrollbar.set, width=50)
 for i in getMusics():
+    print("Adding "+i)
     listbox.insert(END, str(i.split("\\")[len(i.split("\\"))-1])[:len(i.split("\\")[len(i.split("\\"))-1])-4])
 listbox.pack(side=LEFT, fill=BOTH)
 scrollbar.pack(side=LEFT, fill=Y)

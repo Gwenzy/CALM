@@ -2,6 +2,7 @@
 import sqlite3, socket, time
 IP_SERVER = "127.0.0.1"
 PORT_SERVER = 2222
+PORT_SERVER_DL = 1111
 
 
 
@@ -45,13 +46,13 @@ def AddLike(Title):
     
 
     QueryCurs.execute('''UPDATE Musiques
-    SET Like='''+(Like_Number+1)+'''
+    SET Like='''+str(Like_Number+1)+'''
      WHERE Titre = "'''+Title+'''"
     ''')
     
     CreateDataBase.commit()
 
-def AddDislike(ID):
+def AddDislike(Title):
     QueryCurs.execute('''SELECT Like FROM Musiques
     WHERE Titre="'''+Title+'''"
     ''')
@@ -60,7 +61,7 @@ def AddDislike(ID):
     
 
     QueryCurs.execute('''UPDATE Musiques
-    SET Like='''+(Like_Number-1)+'''
+    SET Like='''+str(Like_Number-1)+'''
      WHERE Titre = "'''+Title+'''"
     ''')
     
@@ -69,6 +70,7 @@ def FormatMusics(musics):
     result = ""
     for music in musics:
         result+=music
+        result+=".mp3"
         result+="|"
     return result
 #-------------------------EMERIC------------------------------
@@ -92,10 +94,34 @@ while True:
             time.sleep(2)
             Mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             Mysocket.connect((IP_SERVER, PORT_SERVER+1))
-            Mysocket.send(musics)
+            Mysocket.send(musics.encode())
             Mysocket.close()
         elif response.startswith("download"):
-            None
+            musicName = response[8:]
+            tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            tcpsock.bind((IP_SERVER ,PORT_SERVER_DL))
+            tcpsock.listen(10)
+            print( "En écoute...")
+            (clientsocket, (ip, port)) = tcpsock.accept()
+            print("Connection de %s %s" % (ip, port, ))
+
+            
+            print("Ouverture du fichier: ", musicName , "...")
+            fp = open("Musics/"+musicName+".mp3", 'rb')
+            clientsocket.send(fp.read())
+
+            print("Client déconnecté...")
+        elif response.startswith("like"):
+            musicName = response[4:]
+            AddLike(musicName)
+        elif response.startswith("dislike"):
+            musicName = response[7:]
+            AddDislike(musicName)
+
+
+
+        
         print("Close")
         Mysocket.close()
     except Exception as e: print(str(e))
