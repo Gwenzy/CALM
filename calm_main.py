@@ -3,7 +3,7 @@ import pygame, os, sys, tkinter, socket, time
 from tkinter import *
 #Const
 IP_SERVER = "127.0.0.1"
-PORT_SERVER_MSCLIST = 2222
+PORT_SERVER = 2222
 PORT_SERVER_DL = 1111
 MUSIC_DIRECTORY_WIN = os.getenv('APPDATA')+"\\CALM\\"
 MUSIC_DIRECTORY = ""
@@ -93,7 +93,7 @@ def getOfflineMusics():
 def isServerOnline():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+        s.connect((IP_SERVER, PORT_SERVER))
         s.close()
         time.sleep(1)
         return True
@@ -104,7 +104,7 @@ def downloadMusic(musicName):
 
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+    s.connect((IP_SERVER, PORT_SERVER))
     s.send(("download"+musicName).encode())
     s.close()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -139,7 +139,7 @@ def getMusics():
     
     if(isServerOnline()):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
+        s.connect((IP_SERVER, PORT_SERVER))
         print("Debug")
         
         
@@ -147,7 +147,7 @@ def getMusics():
         s.close()
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((IP_SERVER, PORT_SERVER_MSCLIST+1))
+        s.bind((IP_SERVER, PORT_SERVER+1))
         s.listen(5)
         client, address = s.accept()
         response = client.recv(9999999).decode()
@@ -164,20 +164,21 @@ def getMusics():
 continuer = 1
 
 def like():
-
-    print("You just liked "+currentMusic)
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
-    s.send(("like"+currentMusic).encode())
-    s.close()
+    if(currentMusic!=""):
+        print("You just liked "+currentMusic)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((IP_SERVER, PORT_SERVER))
+        s.send(("like"+currentMusic).encode())
+        s.close()
     
 def dislike():
-    print("You just disliked "+currentMusic)
+    if(currentMusic!=""):
+        print("You just disliked "+currentMusic)
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((IP_SERVER, PORT_SERVER_MSCLIST))
-    s.send(("dislike"+currentMusic).encode())
-    s.close()
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((IP_SERVER, PORT_SERVER))
+        s.send(("dislike"+currentMusic).encode())
+        s.close()
 
 
 
@@ -222,7 +223,6 @@ listbox.pack(side=LEFT, fill=BOTH)
 scrollbar.pack(side=LEFT, fill=Y)
 scrollbar.config(command=listbox.yview)
 
-# downloadMusic("gdf")
 master.mainloop()
 
 

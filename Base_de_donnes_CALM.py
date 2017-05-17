@@ -28,7 +28,7 @@ def AddMusic(Titre,Auteur,Categorie,Like):                                      
 
 def GetMusics():
     Musics = []
-    Resp = QueryCurs.execute('''SELECT Titre FROM Musiques''')
+    Resp = QueryCurs.execute('''SELECT Titre FROM Musiques ORDER BY Like DESC''')
     for row in Resp.fetchall():
         print(row)
         Musics.append(row[0])
