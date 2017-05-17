@@ -22,9 +22,6 @@ QueryCurs.execute('''CREATE TABLE IF NOT EXISTS Musiques
 
 CreateDataBase.commit()
 print("Database created")
-def AddMusic(Titre,Auteur,Categorie,Like):                                                     #A COMPLETER
-        QueryCurs.execute('''INSERT INTO Musiques (Titre,Auteur,Like)
-        VALUES (?,?,?,?,?)''',(Titre,Auteur,0))
 
 def GetMusics():
     Musics = []
@@ -33,9 +30,6 @@ def GetMusics():
         print(row)
         Musics.append(row[0])
     return Musics
-
-def CheminRecherche(Title):
-    return Musics_Directory+Title
 
 def AddLike(Title):
     QueryCurs.execute('''SELECT Like FROM Musiques
@@ -73,18 +67,28 @@ def FormatMusics(musics):
         result+=".mp3"
         result+="|"
     return result
-#-------------------------EMERIC------------------------------
+
 
 
 
 print("Server fully started, ready to listen")
+Mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+Mysocket.bind((IP_SERVER, PORT_SERVER))
+
+tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+tcpsock.bind((IP_SERVER ,PORT_SERVER_DL))
+
+tcpsock.listen(5)
+Mysocket.listen(5)
+
+
 while True:
-    try:
+
+    #try:
         print("Waiting for a new connection")
-        Mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        Mysocket.bind((IP_SERVER, PORT_SERVER))
-        Mysocket.listen(5)
-        client, address = Mysocket.accept()
+        
+        client, (ip, port) = Mysocket.accept()
         print("Someone just connected")
         response = client.recv(255).decode()
         print("New message : "+response)
@@ -92,16 +96,13 @@ while True:
             musics = FormatMusics(GetMusics())
                 
             time.sleep(2)
-            Mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            Mysocket.connect((IP_SERVER, PORT_SERVER+1))
-            Mysocket.send(musics.encode())
-            Mysocket.close()
+            OtherSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print("Connecting on ", ip, "on port ", PORT_SERVER+1)
+            OtherSocket.connect((str(ip), PORT_SERVER+1))
+            OtherSocket.send(musics.encode())
+            OtherSocket.close()
         elif response.startswith("download"):
             musicName = response[8:]
-            tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            tcpsock.bind((IP_SERVER ,PORT_SERVER_DL))
-            tcpsock.listen(10)
             print( "En écoute...")
             (clientsocket, (ip, port)) = tcpsock.accept()
             print("Connection de %s %s" % (ip, port, ))
@@ -110,7 +111,7 @@ while True:
             print("Ouverture du fichier: ", musicName , "...")
             fp = open("Musics/"+musicName+".mp3", 'rb')
             clientsocket.send(fp.read())
-
+            clientsocket.close()
             print("Client déconnecté...")
         elif response.startswith("like"):
             musicName = response[4:]
@@ -123,10 +124,5 @@ while True:
 
         
         print("Close")
-        Mysocket.close()
-    except Exception as e: print(str(e))
-
-
-
-
-
+        client.close()
+    #except Exception as e: print(e)

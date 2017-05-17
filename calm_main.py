@@ -27,29 +27,8 @@ if not os.path.isdir(MUSIC_DIRECTORY):
     os.makedirs(MUSIC_DIRECTORY)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 #Méthodes utiles
-"""def play(musicID):
-    global music
-    #On vérifie si la musique est déjà téléchargée
-    if(isMusicDownloaded(musicID)):
-        music.load(getFileNameByID(musicID))
-        music.play()
-    else:
-        downloadMusic(musicID)
-        play(musicID)
-"""
+
 def playPath(path):
     global music
     #On vérifie si la musique est déjà téléchargée
@@ -123,8 +102,6 @@ def isMusicDownloaded(musicID):
     for i in localMusics:
         if(musicID in i):
             return True
-        else:
-            None
     return False     
 def getFileNameByID(musicID):
     None
@@ -164,7 +141,7 @@ def getMusics():
 continuer = 1
 
 def like():
-    if(currentMusic!=""):
+    if(currentMusic!="" and isServerOnline()):
         print("You just liked "+currentMusic)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((IP_SERVER, PORT_SERVER))
@@ -172,7 +149,7 @@ def like():
         s.close()
     
 def dislike():
-    if(currentMusic!=""):
+    if(currentMusic!="" and isServerOnline()):
         print("You just disliked "+currentMusic)
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -230,10 +207,4 @@ while continuer:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
          continuer=0
-
-
-
-
-
-
 pygame.quit()#Ici!
